@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../api/notification_api.dart';
 import '../widgets/button_widget.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -24,7 +25,13 @@ class HomeScreen extends StatelessWidget {
               ButtonWidget(
                 size: Size(width, 48),
                 title: 'Notify Me',
-                onPressed: () {},
+                onPressed: () {
+                  NotificationApi.showNotification(
+                    title: 'Notification',
+                    body: 'This is a notification from Local Notification Demo',
+                    payload: 'kayes',
+                  );
+                },
                 icon: Icons.notifications,
               ),
               const SizedBox(height: 8),
