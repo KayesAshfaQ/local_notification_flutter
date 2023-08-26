@@ -26,6 +26,7 @@ class HomeScreen extends StatelessWidget {
                 size: Size(width, 48),
                 title: 'Notify Me',
                 onPressed: () {
+                  debugPrint('Notify Me');
                   NotificationApi.showNotification(
                     title: 'Notification',
                     body: 'This is a notification from Local Notification Demo',
