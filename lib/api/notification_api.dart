@@ -1,7 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 import 'package:logger/logger.dart';
+
+import 'time.dart';
 
 class NotificationApi {
   // create local notification instance
@@ -65,22 +69,6 @@ class NotificationApi {
     _notificationStreamController.add(response.payload ?? '');
   }
 
-  // show notification
-  static Future<void> showNotification({
-    int id = 1,
-    String? title,
-    String? body,
-    String? payload,
-  }) async {
-    return _notifications.show(
-      id,
-      title,
-      body,
-      await _notificationDetails(),
-      payload: payload,
-    );
-  }
-
   // notification details for android and ios
   static Future _notificationDetails() async {
     return const NotificationDetails(
@@ -100,5 +88,106 @@ class NotificationApi {
         badgeNumber: 1,
       ),
     );
+  }
+
+  // show notification
+  static Future<void> showNotification({
+    int id = 1,
+    String? title,
+    String? body,
+    String? payload,
+  }) async {
+    return _notifications.show(
+      id,
+      title,
+      body,
+      await _notificationDetails(),
+      payload: payload,
+    );
+  }
+
+  // show notification
+  static Future<void> showScheduledNotification({
+    int id = 1,
+    String? title,
+    String? body,
+    String? payload,
+    //required DateTime scheduledDate,
+  }) async {
+    tz.initializeTimeZones();
+    return _notifications.zonedSchedule(
+      id,
+      title,
+      body,
+      _scheduleWeeklyAtTime(
+        const Time(hour: 18, minute: 45, second: 0),
+        days: [
+          DateTime.saturday,
+          DateTime.sunday,
+          DateTime.monday,
+          DateTime.wednesday,
+          DateTime.friday,
+        ],
+      ),
+      //_scheduleDailyAtTime(const Time(hour: 10)),
+      //tz.TZDateTime.from(scheduledDate, tz.local),
+      //tz.TZDateTime.now(tz.local).add(const Duration(seconds: 6)),
+      await _notificationDetails(),
+      payload: payload,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+    );
+  }
+
+  // show notification
+  static Future<void> showPeriodicNotification({
+    int id = 1,
+    String? title,
+    String? body,
+    String? payload,
+    //required DateTime scheduledDate,
+  }) async {
+    return _notifications.periodicallyShow(
+      id,
+      title,
+      body,
+      RepeatInterval.weekly,
+      await _notificationDetails(),
+      payload: payload,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    );
+  }
+
+  static tz.TZDateTime _scheduleDailyAtTime(Time time) {
+    final now = tz.TZDateTime.now(tz.local);
+    final scheduledDate = tz.TZDateTime(
+      tz.local,
+      now.year,
+      now.month,
+      now.day,
+      now.hour,
+      time.minute,
+      time.second,
+    );
+
+    print('current date: $now');
+    print('scheduled date: $scheduledDate');
+    print('current hour: ${now.hour}  scheduled hour: ${scheduledDate.hour}');
+
+    return scheduledDate.isBefore(now)
+        ? scheduledDate.add(const Duration(days: 1))
+        : scheduledDate;
+  }
+
+  static tz.TZDateTime _scheduleWeeklyAtTime(Time time,
+      {required List<int> days}) {
+    final scheduledDate = _scheduleDailyAtTime(time);
+
+    // move to next day if scheduled date is not in the list
+    while (!days.contains(scheduledDate.weekday)) {
+      scheduledDate.add(const Duration(days: 1));
+      print('weekday: ${scheduledDate.weekday}');
+    }
+    return scheduledDate;
   }
 }

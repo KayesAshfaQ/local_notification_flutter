@@ -66,7 +66,16 @@ class _HomeScreenState extends State<HomeScreen> {
               ButtonWidget(
                 size: Size(width, 48),
                 title: 'Schedule Notification',
-                onPressed: () {},
+                onPressed: () {
+                  debugPrint('Schedule Notification');
+                  NotificationApi.showScheduledNotification(
+                    title: 'Scheduled Notification',
+                    body:
+                        'This is a scheduled notification from Local Notification Demo',
+                    payload: 'scheduled notification payload',
+                    // scheduledDate: DateTime.now().add(const Duration(seconds: 6)),
+                  );
+                },
                 icon: Icons.notifications_active,
               ),
               const SizedBox(height: 8),
