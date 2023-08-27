@@ -15,7 +15,10 @@ class NotificationApi {
   static Stream<String> get notificationStream =>
       _notificationStreamController.stream;
 
-  // init
+  // dispose the stream
+  static void dispose() => _notificationStreamController.close();
+
+  // initialize the notification
   static Future init() async {
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
