@@ -1,7 +1,66 @@
+import 'dart:async';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:logger/logger.dart';
 
 class NotificationApi {
+  // create local notification instance
   static final _notifications = FlutterLocalNotificationsPlugin();
+
+  // a stream to handle the notification events such as when notification is created, when it is clicked, etc.
+  static final _notificationStreamController =
+      StreamController<String>.broadcast();
+
+  // a getter to get the stream
+  static Stream<String> get notificationStream =>
+      _notificationStreamController.stream;
+
+  // init
+  static Future init() async {
+    const androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const iosSettings = DarwinInitializationSettings();
+
+    const initSettings = InitializationSettings(
+      android: androidSettings,
+      iOS: iosSettings,
+    );
+
+    await _notifications.initialize(
+      initSettings,
+      // to handle event when we receive notification
+      onDidReceiveNotificationResponse: _onDidReceiveNotificationResponse,
+      onDidReceiveBackgroundNotificationResponse:
+          _onDidReceiveBackgroundNotificationResponse,
+    );
+  }
+
+  // handle event when we receive notification in background
+  static void _onDidReceiveBackgroundNotificationResponse(
+      NotificationResponse response) {
+    Logger().d('background notification(${response.id}) action tapped: '
+        '${response.actionId} with'
+        ' payload: ${response.payload}');
+    if (response.input?.isNotEmpty ?? false) {
+      Logger().d('notification action tapped with input: ${response.input}');
+    }
+
+    // add payload to stream
+    _notificationStreamController.add(response.payload ?? '');
+  }
+
+  // handle event when we receive notification in foreground
+  static void _onDidReceiveNotificationResponse(NotificationResponse response) {
+    Logger().d('notification(${response.id}) action tapped: '
+        '${response.actionId} with'
+        ' payload: ${response.payload}');
+    if (response.input?.isNotEmpty ?? false) {
+      Logger().d('notification action tapped with input: ${response.input}');
+    }
+
+    // add payload to stream
+    _notificationStreamController.add(response.payload ?? '');
+  }
 
   // show notification
   static Future<void> showNotification({
@@ -19,38 +78,11 @@ class NotificationApi {
     );
   }
 
-  // init
-  static Future init({bool initScheduled = false}) async {
-    final android = AndroidInitializationSettings('@mipmap/ic_launcher');
-    final iOS = DarwinInitializationSettings();
-
-    final settings = InitializationSettings(android: android, iOS: iOS);
-
-    await _notifications.initialize(
-      settings,
-      onDidReceiveNotificationResponse:
-          (NotificationResponse notificationResponse) {
-        switch (notificationResponse.notificationResponseType) {
-          case NotificationResponseType.selectedNotification:
-            print('notificationResponseType:::selectedNotification');
-            // selectNotificationStream.add(notificationResponse.payload);
-            break;
-          case NotificationResponseType.selectedNotificationAction:
-            print('notificationResponseType:::selectedNotificationAction');
-            // if (notificationResponse.actionId == navigationActionId) {
-            //   selectNotificationStream.add(notificationResponse.payload);
-            // }
-            break;
-        }
-      },
-    );
-  }
-
   // notification details for android and ios
   static Future _notificationDetails() async {
     return const NotificationDetails(
       android: AndroidNotificationDetails(
-        'channel id',
+        'channel_id',
         'channel name',
         channelDescription: 'channel description',
         icon: "ic_notification",

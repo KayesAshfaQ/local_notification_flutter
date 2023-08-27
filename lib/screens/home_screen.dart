@@ -1,10 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 
 import '../api/notification_api.dart';
 import '../widgets/button_widget.dart';
+import 'second_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final logger = Logger();
+
+  @override
+  void initState() {
+    super.initState();
+
+    // listen to the stream
+    NotificationApi.notificationStream.listen((event) {
+      logger.i('notification stream payload: $event');
+
+      // navigate to second screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SecondScreen(payload: event),
+        ),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +57,7 @@ class HomeScreen extends StatelessWidget {
                   NotificationApi.showNotification(
                     title: 'Notification',
                     body: 'This is a notification from Local Notification Demo',
-                    payload: 'kayes',
+                    payload: 'notification payload',
                   );
                 },
                 icon: Icons.notifications,
